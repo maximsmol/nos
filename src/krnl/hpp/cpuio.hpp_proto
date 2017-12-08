@@ -1,0 +1,21 @@
+#pragma once
+
+#include <stdint.h>
+
+namespace cpuio {
+  using port_t = uint16_t;
+
+  [[gnu::always_inline]]
+  void outb(const port_t p, const uint8_t  v);
+  [[gnu::always_inline]]
+  void outw(const port_t p, const uint16_t v);
+  [[gnu::always_inline]]
+  void outd(const port_t p, const uint32_t v);
+
+  [[gnu::always_inline]]
+  uint8_t  inb(const port_t p);
+  [[gnu::always_inline]]
+  uint16_t inw(const port_t p);
+  [[gnu::always_inline]]
+  uint32_t ind(const port_t p);
+}

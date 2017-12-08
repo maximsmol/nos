@@ -1,0 +1,53 @@
+boot process:
+  1. boot
+    load krnl deps
+      raw mem map
+      vidmod
+    load prtt
+      parse krnl kexec location
+      load krnl kexec
+
+    cli
+    set cpp-compatible cpu state
+      flat GDT
+      some stack
+      pmode
+
+    parse krnl kexec
+      parse krnl code location
+      move krnl code to 0
+        !!! overwrites BIOS by design
+      parse kmain location
+      run krnl
+
+  2. krnl
+    args: *memmap_start, *memmap_end, *krnl_end
+
+    set permanent gdt and kstack
+
+    todo: needs some ATA driver. delegate to boot?
+    load prtt
+      parse usr kexec location
+      load usr kexec
+        parse usr code size
+        load usr paging after self
+          0-usr: usr code
+          usr-0xfffff000: available physical memory after usr paging
+          0xfffff000: page directory
+        parse usr code location
+        move usr code to after usr paging [align dword]
+
+    parse usr kexec
+      parse usr main
+      run usr
+
+  3. usr
+    args: *freemem_start
+
+reqs:
+  ints
+    IPC
+  mem management
+    parse memmap
+    alloc/dealloc
+    paging

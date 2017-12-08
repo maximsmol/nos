@@ -1,0 +1,7 @@
+boot:
+  need mem_listing fit in mem after boot
+  need krnl fit in mem after mem_listing
+
+krnl:
+  need [[gnu::packed]]
+  need load to 0

@@ -1,0 +1,30 @@
+triple fault with uint64
+
+boot and krnl may need explicit long jump size specifiers
+gdt_entry is defined both in krnl and boot
+
+bld:
+  should use kexec/gen.nasm
+  should use withFile in getting prtt data
+
+boot:
+  should enable a20
+  code load:
+    should load rest of self if longer than boot sector
+    assumes hdd (drive number always 0x80)
+    parses LBA incorrectly when reading prtt
+    may break if loading > 128 sectors
+
+krnl:
+  should load self
+    should have only self-loader in kexec
+  prtt may need [[gnu::packed]]
+  type_traits hacked in
+
+  term:
+    will corrupt mem if not init
+    putnum can out-of-bounds the alphabet
+    no 64 bit printing support
+
+ata:
+  should find boot drive

@@ -1,0 +1,101 @@
+#include <stdint.h>
+
+#include "hpp/term.hpp"
+#include "hpp/ata.hpp"
+#include "hpp/gdt.hpp"
+#include "hpp/prtt.hpp"
+
+#include "hpp/util/paging.hpp"
+
+// [[gnu::aligned(0x1000)]] // 4KiB
+// static uint32_t pagedir[1024];
+
+void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* krnl_end) asm("kmain");
+
+void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* krnl_end) {
+  asm volatile(
+    "lgdt (%[gdtr])\n"
+    "jmp %[selector_code], $1f\n"
+    "1:\n"
+    "mov %[selector_data], %%ds\n"
+    "mov %[selector_data], %%es\n"
+    "mov %[selector_data], %%ss\n"
+    "mov %[selector_data], %%fs\n"
+    "mov %[selector_data], %%gs"
+    :
+    : [gdtr]"m"(gdt::gdtr), [selector_code]"i"(gdt::selector::code), [selector_data]"r"(gdt::selector::data));
+
+  uint8_t* free_mem = krnl_end+1;
+
+  term::init();
+  term::putsln("nos");
+
+  ata::Bus ata0(ata::stdData::bus::ioport::primary);
+  ata::Drive dr = *ata0.master().lookforDrive();
+
+  dr.writeSecCount(1);
+  dr.writeSec(2);
+  dr.writeCylLo(0);
+  dr.writeCylHi(0);
+  dr.writeHead(0);
+  dr.writeCommand(ata::stdData::command::read);
+
+  ata::DriveStatus s(dr.readStatus());
+  while (!s.drq()) {
+    s = dr.readStatus();
+    if (s.df()) {
+      term::puts("drive failure");
+      return;
+    }
+    if (s.err()) {
+      term::puts("drive error");
+      return;
+    }
+  }
+
+  term::putsln("read");
+  for (unsigned int i = 0; i < 512/sizeof(uint16_t); ++i) {
+    reinterpret_cast<uint16_t*>(free_mem)[i] = dr.readData();
+  }
+
+  prtt::Table prtt = *reinterpret_cast<prtt::Table*>(free_mem);
+  prtt::Entry krnl_prt = prtt.krnl;
+  prtt::Entry usr_prt = prtt.usr;
+
+  // while (mem_listing_start < mem_listing_end) {
+  //   uint32_t basel = *mem_listing_start++;
+  //   mem_listing_start++;
+  //   // uint32_t baseh = *mem_listing_start++; // nos is 32 bit
+
+  //   uint32_t lenl = *mem_listing_start++;
+  //   mem_listing_start++;
+  //   // uint32_t lenh = *mem_listing_start++; // nos is 32 bit
+
+  //   uint32_t type = *mem_listing_start++;
+  //   mem_listing_start++;
+  //   // uint32_t eattr = *mem_listing_start++;
+
+  //   term::printf("%x -> %x ", basel, basel+lenl);
+  //   if (type == 1)
+  //     term::putsln("ok");
+  //   else if (type == 2)
+  //     term::putsln("res");
+  //   else if (type == 3)
+  //     term::putsln("rec");
+  //   else if (type == 4)
+  //     term::putsln("nvs");
+  //   else if (type == 5)
+  //     term::putsln("bad");
+  //   else
+  //     term::printf("? %d\n", type);
+  // }
+
+  // dr.writeSecCount(0);
+  // dr.writeSec(0);
+  // dr.writeCylLo(0);
+  // dr.writeCylHi(0);
+  // dr.writeCommand(ata::stdData::command::identify);
+
+  // ata::DriveStatus s(dr.readStatus());
+  // term::printf("f:%d e:%d d:%d", s.raw() == 0, s.err(), s.drq());
+}

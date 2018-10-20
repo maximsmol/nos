@@ -1,3 +1,3 @@
-[map all]
+; [map all]
 
 %include "boot16.nasm"

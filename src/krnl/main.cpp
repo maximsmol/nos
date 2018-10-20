@@ -75,10 +75,12 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
 
   term::putsln("read");
   for (unsigned int i = 0; i < 512/sizeof(uint16_t); ++i) {
-    reinterpret_cast<uint16_t*>(free_mem)[i] = dr.readData();
+    uint16_t chunk = dr.readData();
+    memcpy(free_mem + i*sizeof(uint16_t), &chunk, sizeof(uint16_t));
   }
 
-  prtt::Table prtt = *reinterpret_cast<prtt::Table*>(free_mem);
+  prtt::Table prtt{};
+  memcpy(&prtt, free_mem, sizeof(prtt::Table));
   prtt::Entry krnl_prt = prtt.krnl;
   prtt::Entry usr_prt = prtt.usr;
 

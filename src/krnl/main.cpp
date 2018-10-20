@@ -87,6 +87,10 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
   prtt::Entry krnl_prt = prtt.krnl;
   prtt::Entry usr_prt = prtt.usr;
 
+  term::printf("%c%c%c%c:\n", prtt.maginum[0],prtt.maginum[1],prtt.maginum[2],prtt.maginum[3]);
+  term::printf("  krnl: @%lld:%hd size = %lld:%hd = %lld\n", krnl_prt.loc_seg, krnl_prt.loc_off, krnl_prt.size_seg, krnl_prt.size_off, (krnl_prt.size_seg<<9) + krnl_prt.size_off);
+  term::printf("  usr: @%lld:%hd size = %lld:%hd = %lld\n", usr_prt.loc_seg, usr_prt.loc_off, usr_prt.size_seg, usr_prt.size_off, (usr_prt.size_seg<<9) + usr_prt.size_off);
+
   int i = 0;
   while (mem_listing_start < mem_listing_end) {
     if (i >= 25)
@@ -119,13 +123,4 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
 
     ++i;
   }
-
-  // dr.writeSecCount(0);
-  // dr.writeSec(0);
-  // dr.writeCylLo(0);
-  // dr.writeCylHi(0);
-  // dr.writeCommand(ata::stdData::command::identify);
-
-  // ata::DriveStatus s(dr.readStatus());
-  // term::printf("f:%d e:%d d:%d", s.raw() == 0, s.err(), s.drq());
 }

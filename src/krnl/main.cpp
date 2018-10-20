@@ -48,6 +48,9 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
   uint8_t* free_mem = krnl_end+1;
 
   term::init();
+  term::printf("kmain(0x%p, 0x%p, 0x%p)\n", mem_listing_start, mem_listing_end, krnl_end);
+  // return;
+
   term::putsln("nos");
 
   ata::Bus ata0(ata::stdData::bus::ioport::primary);
@@ -84,33 +87,38 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
   prtt::Entry krnl_prt = prtt.krnl;
   prtt::Entry usr_prt = prtt.usr;
 
-  // while (mem_listing_start < mem_listing_end) {
-  //   uint32_t basel = *mem_listing_start++;
-  //   mem_listing_start++;
-  //   // uint32_t baseh = *mem_listing_start++; // nos is 32 bit
+  int i = 0;
+  while (mem_listing_start < mem_listing_end) {
+    if (i >= 25)
+      break;
 
-  //   uint32_t lenl = *mem_listing_start++;
-  //   mem_listing_start++;
-  //   // uint32_t lenh = *mem_listing_start++; // nos is 32 bit
+    uint64_t base = 0;
+    memcpy(&base, mem_listing_start, sizeof(uint64_t));
+    mem_listing_start++; mem_listing_start++;
 
-  //   uint32_t type = *mem_listing_start++;
-  //   mem_listing_start++;
-  //   // uint32_t eattr = *mem_listing_start++;
+    uint64_t len = 0;
+    memcpy(&len, mem_listing_start, sizeof(uint64_t));
+    mem_listing_start++; mem_listing_start++;
 
-  //   term::printf("%x -> %x ", basel, basel+lenl);
-  //   if (type == 1)
-  //     term::putsln("ok");
-  //   else if (type == 2)
-  //     term::putsln("res");
-  //   else if (type == 3)
-  //     term::putsln("rec");
-  //   else if (type == 4)
-  //     term::putsln("nvs");
-  //   else if (type == 5)
-  //     term::putsln("bad");
-  //   else
-  //     term::printf("? %d\n", type);
-  // }
+    uint32_t type = *mem_listing_start++;
+    uint32_t eattr = *mem_listing_start++;
+
+    term::printf("%d: %llx -> %llx ", i, base&0xffffffff/*(base&0xffffffff00000000)>>32*/, base+len);
+    if (type == 1)
+      term::putsln("ok");
+    else if (type == 2)
+      term::putsln("res");
+    else if (type == 3)
+      term::putsln("rec");
+    else if (type == 4)
+      term::putsln("nvs");
+    else if (type == 5)
+      term::putsln("bad");
+    else
+      term::printf("? %d\n", type);
+
+    ++i;
+  }
 
   // dr.writeSecCount(0);
   // dr.writeSec(0);

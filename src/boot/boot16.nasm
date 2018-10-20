@@ -15,7 +15,11 @@ boot16:
 
   read_mem_listing:
     mov di, mem_listing ; dest
-    mov bp, 0 ; non-0 = !first iteration
+    ; mov dword [mem_listing], 0xDEAD
+    ; add di, 2
+    ; mov dword [mem_listing], 0xBEEF
+    ; add di, 2
+    xor bp, bp ; non-0 = !first iteration
 
     xor ebx, ebx ; magic iteration num = 0 @ start
     mov edx, 'PAMS' ; magic num, SMAP backwards

@@ -25,22 +25,23 @@ boot32:
     mov ecx, [eax + prtt.krnl + prtt_entry.size_seg]
     shl ecx, 9
 
-    movzx ebx, byte [eax + prtt.krnl + prtt_entry.size_off]
+    movzx ebx, word [eax + prtt.krnl + prtt_entry.size_off]
     add ecx, ebx
 
-    ; ecx = ceil((size_seg*512 + size_off)/4)
-    add ecx, 1
+    ; ecx = ceil((size_seg*512 + size_off)/4) ; 4 = sizeof dword
+    add ecx, 3 ; sizeof dword - 1
     mov ebx, ecx
     shr ecx, 2 ; log2(sizeof dword)
 
     rep movsd
 
   ; kmain(*mem_listing_start, *mem_listing_end, *krnl_end)
+  push edi
+
   movzx eax, word [pmem_listing_end]
   push eax
 
   push mem_listing
-  push ebx
 
   mov eax, [pkrnl_tmp]
   add eax, kexec.entry

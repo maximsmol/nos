@@ -62,16 +62,16 @@ namespace term {
   constexpr char ucase_alphabet[] = "0123456789ABCDEF";
   template<class T, const char* alphabet = lcase_alphabet>
   typ::enable_if< typ::unsigned_::pred<T> > putnum(T x, const T base = 10) {
-    if (base == 16)
-      puts("0x");
-    else if (base == 2)
-      puts("0b");
+    // if (base == 16)
+    //   puts("0x");
+    // else if (base == 2)
+    //   puts("0b");
 
     if (x == 0)
       putch('0');
     else {
-      if (base == 8)
-        putch('0');
+      // if (base == 8)
+      //   putch('0');
 
       volatile char* start = vmem_woffset;
       for (;x > 0; x /= base)
@@ -105,11 +105,13 @@ namespace term {
   template void putnum<short>(short x, const short base);
   template void putnum<int>(int x, const int base);
   template void putnum<long>(long x, const long base);
+  template void putnum<long long>(long long x, const long long base);
 
   template void putnum<unsigned char>(unsigned char x, const unsigned char base);
   template void putnum<unsigned short>(unsigned short x, const unsigned short base);
   template void putnum<unsigned int>(unsigned int x, const unsigned int base);
   template void putnum<unsigned long>(unsigned long x, const unsigned long base);
+  template void putnum<unsigned long long>(unsigned long long x, const unsigned long long base);
 
 
   void putsln(const char* str) {
@@ -117,7 +119,7 @@ namespace term {
     putch('\n');
   }
   void printf(const char* fmt...) {
-    va_list args = nullptr;
+    va_list args;
     va_start(args, fmt);
 
     for (;*fmt != '\0'; ++fmt) {

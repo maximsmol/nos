@@ -5,10 +5,10 @@ struc prtt_entry
   ; LBA + offset in 1st 512B segment
 
   .loc_seg: resq 1
-  .loc_off: resb 1
+  .loc_off: resd 1
 
   .size_seg: resq 1
-  .size_off: resb 1
+  .size_off: resd 1
 endstruc
 
 struc prtt

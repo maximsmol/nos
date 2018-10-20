@@ -10,11 +10,31 @@
 // [[gnu::aligned(0x1000)]] // 4KiB
 // static uint32_t pagedir[1024];
 
+#include "string.h"
+void* memcpy(void* dist, const void* src, size_t len) {
+  char* d = static_cast<char*>(dist);
+  const char* s = static_cast<const char*>(src);
+
+  for (size_t i = 0; i < len; ++i)
+    *(d+i) = *(s+i);
+
+  return dist;
+}
+void* memset(void* dist, int ch, size_t len) {
+  unsigned char* d = static_cast<unsigned char*>(dist);
+  unsigned char fill = static_cast<unsigned char>(ch);
+
+  for (size_t i = 0; i < len; ++i)
+    *(d+i) = fill;
+
+  return dist;
+}
+
 void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* krnl_end) asm("kmain");
 
 void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* krnl_end) {
   asm volatile(
-    "lgdt (%[gdtr])\n"
+    "lgdt %[gdtr]\n"
     "jmp %[selector_code], $1f\n"
     "1:\n"
     "mov %[selector_data], %%ds\n"

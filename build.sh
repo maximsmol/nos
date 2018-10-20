@@ -1,3 +1,3 @@
 #!/bin/bash
-export PATH="$HOME/opt/cross/bin:$PATH"
+# export PATH"/usr/local/opt/llvm:$PATH"
 stack runhaskell -- shake.hs $@

@@ -2,6 +2,7 @@
 
 #include "hpp/term.hpp"
 #include "hpp/ata.hpp"
+#include "hpp/ps8042.hpp"
 #include "hpp/gdt.hpp"
 #include "hpp/prtt.hpp"
 
@@ -122,5 +123,11 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
       term::printf("? %d\n", type);
 
     ++i;
+  }
+
+  ps8042::Controller c{};
+  while (true) {
+    uint8_t b = c.poll();
+    term::printf("ps8042-1: %hhx\n", b);
   }
 }

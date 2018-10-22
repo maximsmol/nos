@@ -368,7 +368,7 @@ main = shakeArgs shakeOptions' $ do
 
   let defaultCPPObjectConfig = emptyCPPObjectConfig{
         compiler=llvmBin</>"clang++",
-        common_flags=defaultCPPCommonFlags{-++["-Wpadded"]-}
+        common_flags=defaultCPPCommonFlags++["-fno-exceptions"]{-++["-Wpadded"]-}
       }
   let defaultLinkConfig = emptyLinkConfig{
         linker=llvmBin</>"ld.lld"
@@ -388,7 +388,7 @@ main = shakeArgs shakeOptions' $ do
     libraries = emptyLibConfig{
       byPath = [llvmPath</>"compiler-rt_x86-none-elf/lib/generic/clang_rt.builtins-i386"]
     },
-    sources = ("krnl"</>) <$> ["main", "ata", "term"]
+    sources = ("krnl"</>) <$> ["main", "ata", "term", "ps8042"]
   }
   linkRules kernelLinkBaseConfig{
     outPath = "krnl"</>"elf",

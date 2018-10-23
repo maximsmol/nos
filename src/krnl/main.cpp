@@ -7,6 +7,7 @@
 #include "hpp/prtt.hpp"
 
 #include "hpp/util/paging.hpp"
+#include "hpp/scancode_set/2.hpp"
 
 // [[gnu::aligned(0x1000)]] // 4KiB
 // static uint32_t pagedir[1024];
@@ -126,8 +127,9 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
   }
 
   ps8042::Controller c{};
+  using namespace scancode_set2;
   while (true) {
-    uint8_t b = c.poll();
-    term::printf("ps8042-1: %hhx\n", b);
+    KbdEvent e = pollKbd(c);
+    term::printf("ps8042-1: %s, %s\n", scancode_set2::scancodeName(e.code), e.type == KbdEventType::Press ? "press" : "release");
   }
 }

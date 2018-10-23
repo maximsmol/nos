@@ -191,6 +191,12 @@ namespace ps8042 {
       Controller();
       ~Controller();
 
+      Controller(const Controller& that) = delete;
+      Controller(Controller&& that) = default;
+
+      Controller& operator=(const Controller& that) = delete;
+      Controller& operator=(Controller&& that) = default;
+
       ControllerStatus status() const;
 
       ControllerConfig config() const;

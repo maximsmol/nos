@@ -37,10 +37,10 @@ namespace ps8042 {
 
     if (dualChannel) {
       cmd(stdData::cmd::port2::on);
-      if (!config().port2Clock()) {
+      if (!config().port2Clock())
         dualChannel = false;
+      else
         cmd(stdData::cmd::port2::off);
-      }
     }
     // term::printf("dual channel: %d\n", dualChannel);
 

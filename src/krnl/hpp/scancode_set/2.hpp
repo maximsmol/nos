@@ -714,7 +714,7 @@ namespace scancode_set2 {
     Scancode::page_down,   // 0x7a
     Scancode::unknown,     // 0x7b
     Scancode::unknown,     // 0x7c
-    Scancode::page_up,     // 0x7d
+    Scancode::page_up      // 0x7d
   };
 
   constexpr uint8_t printscrn_press[] = {

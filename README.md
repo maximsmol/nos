@@ -33,7 +33,7 @@ nOS running in `qemu-system-i386` on Mac OS Mojave, displaying:
 1. PIC support
 1. Physical memory manager
 1. Memory virtualization. So far a flat physical memory model is used
-  - Virtual memory manager
+1. Virtual memory manager
 1. Kernel console
 1. IRQ support
 1. Kernel and bootloader debugging functionality

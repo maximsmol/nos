@@ -4,6 +4,8 @@ nOS is primarily developed as an exercise and for the purposes of education of t
 
 ## Status
 
+[![Video](vid.png)](https://youtu.be/19KFeEknIAE)
+
 ![Screenshot](screenshot.png)
 
 nOS running in `qemu-system-i386` on Mac OS Mojave, displaying:
@@ -46,3 +48,17 @@ nOS running in `qemu-system-i386` on Mac OS Mojave, displaying:
 - Does not enable the A20 line upon boot, relying on it being on by default.
 - Kernel overrides the bootloader's GDTR to point to an equivalent GDT
 - Driver API makes it easy for the consumer to write buggy code
+
+## Building
+nOS uses [Shake](https://shakebuild.com/).
+
+### Dependency list
+- [NASM](https://www.nasm.us/)
+- [clang++](http://clang.llvm.org/) capable of targeting i386
+- [lld](http://lld.llvm.org/) capable of linking ELF
+- [compiler-rt](http://compiler-rt.llvm.org/) targetting the `x86-none-elf` triplet
+
+After installing the dependencies, simply run `./build.sh` from the project folder.
+
+## Manual
+Use `./run.sh` to run the application once built.

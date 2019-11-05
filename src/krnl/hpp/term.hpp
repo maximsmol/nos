@@ -7,6 +7,8 @@ namespace term {
   constexpr int width = 80;
   constexpr int height = 25;
 
+  void clear();
+  void clearLine();
   void init(); // fixme: if not init will corrupt mem
 
   int getX();

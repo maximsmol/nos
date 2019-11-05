@@ -1,5 +1,7 @@
 %include "../prtt/def.nasm"
 
+%include "demo_macros.nasm"
+
 bits 16
 
 org 0x7c00
@@ -8,17 +10,21 @@ krnl_final_addr: equ 0x0
 
 stack_tmp: equ $-1
 boot16:
+  mov sp, stack_tmp
+  f_actively_cause_global_warming16 500
+
+  f_demo_puts16 '[boot16]: set video mode'
+  mov byte [demo_lines], 0
+
   vid_mode:
     mov ah, 0 ; op N
     mov al, 3 ; 80x25
     int 0x10
 
+  f_demo_puts16 '[boot16]: read mem map'
+
   read_mem_listing:
     mov di, mem_listing ; dest
-    ; mov dword [mem_listing], 0xDEAD
-    ; add di, 2
-    ; mov dword [mem_listing], 0xBEEF
-    ; add di, 2
     xor bp, bp ; non-0 = !first iteration
 
     xor ebx, ebx ; magic iteration num = 0 @ start
@@ -58,10 +64,12 @@ boot16:
     .done:
     mov [pmem_listing_end], di
 
-  read_prtt:
-    mov bx, [pfree_mem] ; out loc
+  f_demo_puts16 '[boot16]: read boot32'
 
-    mov al, prtt_size_sec ; sec count
+  read_boot32:
+    mov bx, boot32_section ; out loc
+
+    mov al, 1 ; sec count
     mov ch, 0 ; cyl #
     mov cl, 2 ; start sec # (1-based)
     mov dh, 0 ; head #
@@ -69,6 +77,22 @@ boot16:
 
     mov ah, 2 ; read
     int 0x13
+
+  f_demo_puts16 '[boot16]: read partition table'
+
+  read_prtt:
+    mov bx, [pfree_mem] ; out loc
+
+    mov al, prtt_size_sec ; sec count
+    mov ch, 0 ; cyl #
+    mov cl, 3 ; start sec # (1-based)
+    mov dh, 0 ; head #
+    mov dl, 0x80 ; drive # (0x80 = 'C')
+
+    mov ah, 2 ; read
+    int 0x13
+
+  f_demo_puts16_ptr boot16_kexec_message
 
   read_krnl:
     mov bx, [pfree_mem] ; out loc
@@ -102,6 +126,8 @@ boot16:
     mov ah, 2 ; read
     int 0x13
 
+  f_demo_puts16_ptr boot16_proto_message
+
   cli:
     cli
 
@@ -121,7 +147,7 @@ boot16:
     ; fixme: may need explicit size specifier
     jmp gdt_tmp_code:boot32 ; ljmp to set code segment
 
-%include "boot32.nasm"
+%include "demo_tools16.nasm"
 
 ; - - -
 
@@ -147,6 +173,12 @@ pkrnl_tmp:
 
 boot_pad: times 512-2-($-$$) db 0
 boot_sig: db 0x55,0xaa
+
+%include "boot32.nasm"
+
+%include "demo_tools32.nasm"
+
+times 1024-($-$$) db 0
 
 boot_end:
 mem_listing:

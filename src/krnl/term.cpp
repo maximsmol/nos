@@ -9,6 +9,26 @@ namespace term {
   static int posY = 0;
   static volatile char* vmem_woffset = nullptr;
 
+  void clear() {
+    vmem_woffset = vmem_base;
+    for (int x = 0; x < width; ++x)
+      for (int y = 0; y < height; ++y) {
+        *vmem_woffset++ = ' ';
+        *vmem_woffset++ = 7;
+      }
+
+    posX = 0;
+    posY = 0;
+    vmem_woffset = vmem_base;
+  }
+  void clearLine() {
+    moveAbs(0, posY);
+    for (int x = 0; x < width; ++x) {
+      *vmem_woffset++ = ' ';
+      *vmem_woffset++ = 7;
+    }
+    moveAbs(0, posY);
+  }
   void init() {
     posX = 0;
     posY = 0;

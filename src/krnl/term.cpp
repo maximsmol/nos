@@ -5,9 +5,9 @@
 #include "hpp/typ.hpp"
 
 namespace term {
-  static int posX = 0;
-  static int posY = 0;
-  static volatile char* vmem_woffset = nullptr;
+  static int posX;
+  static int posY;
+  static volatile char* vmem_woffset;
 
   void clear() {
     vmem_woffset = vmem_base;

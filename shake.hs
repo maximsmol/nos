@@ -114,7 +114,7 @@ data CPPObjectConfig = CPPObjectConfig {
   release_flags :: [String]
 }
 defaultCPPCommonFlags :: [String]
-defaultCPPCommonFlags = ["-std=c++1z"] ++ warnFlags ++ diagFlags
+defaultCPPCommonFlags = ["-std=c++20"] ++ warnFlags ++ diagFlags
   where
     warnFlags = [
         "-Weverything", "-Wno-float-equal", "-Wno-padded",
@@ -125,7 +125,7 @@ defaultCPPCommonFlags = ["-std=c++1z"] ++ warnFlags ++ diagFlags
 defaultCPPDebugFlags :: [String]
 defaultCPPDebugFlags = ["-O0"]
 defaultCPPReleaseFlags :: [String]
-defaultCPPReleaseFlags = ["-Ofast"]
+defaultCPPReleaseFlags = ["-O2"]
 
 emptyCPPObjectConfig :: CPPObjectConfig
 emptyCPPObjectConfig = CPPObjectConfig {
@@ -363,15 +363,12 @@ main :: IO ()
 main = shakeArgs shakeOptions' $ do
   liftIO $ createDirectoryIfMissing True shake_report
 
-  let llvmPath = "/Users/maximsmol/opt/llvm/"
-  let llvmBin = llvmPath</>"bld/bin/"
-
   let defaultCPPObjectConfig = emptyCPPObjectConfig{
-        compiler=llvmBin</>"clang++",
+        compiler="clang++",
         common_flags=defaultCPPCommonFlags++["-fno-exceptions"]{-++["-Wpadded"]-}
       }
   let defaultLinkConfig = emptyLinkConfig{
-        linker=llvmBin</>"ld.lld"
+        linker="ld.lld"
       }
   let defaultNasmConfig = emptyNasmConfig{
         nasm="nasm"
@@ -379,15 +376,15 @@ main = shakeArgs shakeOptions' $ do
 
   cppObjectRules defaultCPPObjectConfig{
     name = "krnl",
-    common_flags = common_flags (defaultCPPObjectConfig :: CPPObjectConfig)++["-target", "i386-none-elf", "-mno-sse"]
+    common_flags = common_flags (defaultCPPObjectConfig :: CPPObjectConfig)++[
+      "-m32", "-fno-stack-protector", "-mno-sse", "-ffreestanding",
+      "-nostdlib"
+    ]
   }
 
   let kernelLinkBaseCommonFlags = defaultLinkCommonFlags++["-nostdlib", "--Ttext", "0"]
   let kernelLinkBaseConfig = defaultLinkConfig{
     common_flags = kernelLinkBaseCommonFlags,
-    libraries = emptyLibConfig{
-      byPath = [llvmPath</>"compiler-rt_x86-none-elf/lib/generic/clang_rt.builtins-i386"]
-    },
     sources = ("krnl"</>) <$> ["main", "ata", "term", "ps8042"]
   }
   linkRules kernelLinkBaseConfig{
@@ -402,7 +399,7 @@ main = shakeArgs shakeOptions' $ do
   bldDir globalDirConfig</>"krnl"</>"kmain_addr" %> \out -> do
     let krnlelf = bldDir globalDirConfig</>"krnl"</>"elf"
     need [krnlelf]
-    () <- cmd Shell (llvmBin</>"llvm-objdump") "-t" [krnlelf] "|" "grep kmain" "|" "ggrep -oP \"^[a-f0-9]+\"" "|" "tac" "-rs" ".." "|" "xxd" "-r" "-p" ">" [out]
+    () <- cmd Shell ("llvm-objdump") "-t" [krnlelf] "|" "grep kmain" "|" "grep -oP \"^[a-f0-9]+\"" "|" "tac" "-rs" ".." "|" "xxd" "-r" "-p" ">" [out]
     return ()
 
   bldDir globalDirConfig</>"krnl"</>"kexec" %> \out -> do

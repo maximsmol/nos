@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include "hpp/stdint.hpp"
 
 #include "hpp/term.hpp"
 #include "hpp/ata.hpp"
@@ -12,7 +12,6 @@
 // [[gnu::aligned(0x1000)]] // 4KiB
 // static uint32_t pagedir[1024];
 
-#include "string.h"
 int strcmp(const char* l, const char* r) {
   int i = 0;
   while (true) {
@@ -69,6 +68,7 @@ void* memcpy(void* dist, const void* src, size_t len) {
 
   return dist;
 }
+void* memset(void* dist, int ch, size_t len) asm("memset");
 void* memset(void* dist, int ch, size_t len) {
   unsigned char* d = static_cast<unsigned char*>(dist);
   unsigned char fill = static_cast<unsigned char>(ch);

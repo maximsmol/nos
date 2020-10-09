@@ -125,13 +125,13 @@ namespace term {
   template void putnum<short>(short x, const short base);
   template void putnum<int>(int x, const int base);
   template void putnum<long>(long x, const long base);
-  template void putnum<long long>(long long x, const long long base);
+  // template void putnum<long long>(long long x, const long long base);
 
   template void putnum<unsigned char>(unsigned char x, const unsigned char base);
   template void putnum<unsigned short>(unsigned short x, const unsigned short base);
   template void putnum<unsigned int>(unsigned int x, const unsigned int base);
   template void putnum<unsigned long>(unsigned long x, const unsigned long base);
-  template void putnum<unsigned long long>(unsigned long long x, const unsigned long long base);
+  // template void putnum<unsigned long long>(unsigned long long x, const unsigned long long base);
 
 
   void putsln(const char* str) {
@@ -233,8 +233,8 @@ namespace term {
             putnum<signed char>( static_cast<signed char>(va_arg(args, int)) );
           else if (h)
             putnum<short>( static_cast<short>(va_arg(args, int)) );
-          else if (ll)
-            putnum<long long>(va_arg(args, long long));
+          // else if (ll)
+          //   putnum<long long>(va_arg(args, long long));
           else if (l)
             putnum<long>(va_arg(args, long));
           else
@@ -245,8 +245,8 @@ namespace term {
             putnum<unsigned char>( static_cast<unsigned char>(va_arg(args, unsigned int)), 8);
           else if (h)
             putnum<unsigned short>( static_cast<unsigned short>(va_arg(args, unsigned int)), 8);
-          else if (ll)
-            putnum<unsigned long long>(va_arg(args, unsigned long long), 8);
+          // else if (ll)
+            // putnum<unsigned long long>(va_arg(args, unsigned long long), 8);
           else if (l)
             putnum<unsigned long>(va_arg(args, unsigned long), 8);
           else
@@ -257,8 +257,8 @@ namespace term {
             putnum<unsigned char>( static_cast<unsigned char>(va_arg(args, unsigned int)), 16);
           else if (h)
             putnum<unsigned short>( static_cast<unsigned short>(va_arg(args, unsigned int)), 16);
-          else if (ll)
-            putnum<unsigned long long>(va_arg(args, unsigned long long), 16);
+          // else if (ll)
+          //   putnum<unsigned long long>(va_arg(args, unsigned long long), 16);
           else if (l)
             putnum<unsigned long>(va_arg(args, unsigned long), 16);
           else
@@ -269,8 +269,8 @@ namespace term {
             putnum<unsigned char, ucase_alphabet>( static_cast<unsigned char>(va_arg(args, unsigned int)), 16);
           else if (h)
             putnum<unsigned short, ucase_alphabet>( static_cast<unsigned short>(va_arg(args, unsigned int)), 16);
-          else if (ll)
-            putnum<unsigned long long, ucase_alphabet>(va_arg(args, unsigned long long), 16);
+          // else if (ll)
+          //   putnum<unsigned long long, ucase_alphabet>(va_arg(args, unsigned long long), 16);
           else if (l)
             putnum<unsigned long, ucase_alphabet>(va_arg(args, unsigned long), 16);
           else
@@ -281,8 +281,8 @@ namespace term {
             putnum<unsigned char>( static_cast<unsigned char>(va_arg(args, unsigned int)) );
           else if (h)
             putnum<unsigned short>( static_cast<unsigned short>(va_arg(args, unsigned int)) );
-          else if (ll)
-            putnum<unsigned long long>(va_arg(args, unsigned long long));
+          // else if (ll)
+          //   putnum<unsigned long long>(va_arg(args, unsigned long long));
           else if (l)
             putnum<unsigned long>(va_arg(args, unsigned long));
           else

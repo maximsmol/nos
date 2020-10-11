@@ -38,7 +38,7 @@ boot32:
     mov edi, krnl_final_addr
 
     ; mov eax, word [pprtt]
-    movzx eax, word [pprtt]
+    mov eax, pprtt
 
     ; ecx = size_seg*512
     mov ecx, [eax + prtt.krnl + prtt_entry.size_seg]
@@ -59,10 +59,11 @@ boot32:
   ; kmain(*mem_listing_start, *mem_listing_end, *krnl_end)
   push edi
 
-  movzx eax, word [pmem_listing_end]
+  movzx eax, word [pfree_mem]
   push eax
 
-  push mem_listing
+  movzx eax, word [pmem_listing]
+  push eax
 
   movzx eax, word [pkrnl_tmp]
   add eax, kexec.entry

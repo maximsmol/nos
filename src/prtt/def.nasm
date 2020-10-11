@@ -4,6 +4,7 @@
 struc prtt_entry
   ; LBA + offset in 1st 512B segment
 
+  ; 16 bit, so quard word is actually 32 bit for some reason
   .loc_seg: resq 1
   .loc_off: resd 1
 

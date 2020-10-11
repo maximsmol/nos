@@ -1,5 +1,4 @@
-{ pkgs ? import <nixpkgs> {},
-  i386pkgs ? (import <nixpkgs> {}).pkgsi686Linux }:
+{ pkgs ? import <nixpkgs> {} }:
 
 with pkgs;
 let

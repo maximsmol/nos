@@ -1,87 +1,22 @@
-#include "hpp/stdint.hpp"
+#include "stdint.hpp"
+#include "string.hpp"
 
-#include "hpp/term.hpp"
-#include "hpp/ata.hpp"
-#include "hpp/ps8042.hpp"
-#include "hpp/gdt.hpp"
-#include "hpp/prtt.hpp"
+#include "term.hpp"
+#include "ata.hpp"
+#include "ps8042.hpp"
+#include "gdt.hpp"
+#include "prtt.hpp"
 
-#include "hpp/util/paging.hpp"
-#include "hpp/scancode_set/2.hpp"
+#include "alloc/watermark.hpp"
+#include "util/paging.hpp"
+#include "scancode_set/2.hpp"
 
 // [[gnu::aligned(0x1000)]] // 4KiB
 // static uint32_t pagedir[1024];
 
-int strcmp(const char* l, const char* r) {
-  int i = 0;
-  while (true) {
-    if (l[i] == '\0') {
-      if (r[i] == '\0')
-        return 0;
-      else
-        return -1;
-    }
-    if (r[i] == '\0') {
-      if (l[i] == '\0')
-        return 0;
-      else
-        return 1;
-    }
-
-    if (l[i] != r[i])
-      return l[i] < r[i] ? -1 : 1;
-    ++i;
-  }
-}
-
-int strncmp(const char* l, const char* r, size_t c) {
-  size_t i = 0;
-  while (true) {
-    if (i == c)
-      return 0;
-
-    if (l[i] == '\0') {
-      if (r[i] == '\0')
-        return 0;
-      else
-        return -1;
-    }
-    if (r[i] == '\0') {
-      if (l[i] == '\0')
-        return 0;
-      else
-        return 1;
-    }
-
-    if (l[i] != r[i])
-      return l[i] < r[i] ? -1 : 1;
-    ++i;
-  }
-}
-
-void* memcpy(void* dist, const void* src, size_t len) {
-  char* d = static_cast<char*>(dist);
-  const char* s = static_cast<const char*>(src);
-
-  for (size_t i = 0; i < len; ++i)
-    *(d+i) = *(s+i);
-
-  return dist;
-}
-void* memset(void* dist, int ch, size_t len) asm("memset");
-void* memset(void* dist, int ch, size_t len) {
-  unsigned char* d = static_cast<unsigned char*>(dist);
-  unsigned char fill = static_cast<unsigned char>(ch);
-
-  for (size_t i = 0; i < len; ++i)
-    *(d+i) = fill;
-
-  return dist;
-}
-
 void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* krnl_end) asm("kmain");
-void printMemListing(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* free_mem);
-void printprtt(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* free_mem);
+void printMemListing(uint32_t* mem_listing_start, const uint32_t* mem_listing_end);
+void printprtt(uint8_t* free_mem);
 
 void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* krnl_end) {
   asm volatile(
@@ -96,15 +31,30 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
     :
     : [gdtr]"m"(gdt::gdtr), [selector_code]"i"(gdt::selector::code), [selector_data]"r"(gdt::selector::data));
 
-  uint8_t* free_mem = krnl_end+1;
-
   term::init();
   term::clear();
-  term::printf("kmain(0x%p, 0x%p, 0x%p)\n", mem_listing_start, mem_listing_end, krnl_end);
+  term::printf("kmain(0x%p, 0x%p, 0x%p)\n", static_cast<void*>(mem_listing_start), static_cast<const void*>(mem_listing_end), static_cast<void*>(krnl_end));
   term::putsln("nos kernel loaded");
+
+  if (static_cast<const void*>(mem_listing_end) < static_cast<const void*>(mem_listing_start))
+    term::panicln("Memory map ends before it starts.");
+  if (static_cast<const void*>(mem_listing_start) < static_cast<const void*>(krnl_end))
+    term::panicln("Memory map starts inside the kernel.");
+
+  uint8_t* free_mem = krnl_end+32;
+  alloc::watermark::setup(free_mem, 1024 * 4); // 4 KiB page
+
+  size_t mem_listing_len = static_cast<size_t>(mem_listing_end - mem_listing_start) * sizeof(uint32_t);
+  uint32_t* mem_listing_moved = static_cast<uint32_t*>(alloc::watermark::alloc(mem_listing_len));
+  memcpy(mem_listing_moved, mem_listing_start, mem_listing_len);
+
+  mem_listing_start = mem_listing_moved;
+  mem_listing_end = mem_listing_start + mem_listing_len / sizeof(uint32_t);
 
   ps8042::Controller c{};
   using namespace scancode_set2;
+
+  uint8_t* print_prtt_mem = static_cast<uint8_t*>(alloc::watermark::alloc(512));
 
   char buf[25];
   buf[0] = '\0';
@@ -117,11 +67,13 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
         term::nl();
 
         if (strcmp(buf, "prtt") == 0)
-          printprtt(mem_listing_start, mem_listing_end, free_mem);
+          printprtt(print_prtt_mem);
         else if (strcmp(buf, "memlist") == 0)
-          printMemListing(mem_listing_start, mem_listing_end, free_mem);
+          printMemListing(mem_listing_start, mem_listing_end);
         else if (strcmp(buf, "clear") == 0)
           term::clear();
+        else if (strcmp(buf, "memstat") == 0)
+          alloc::watermark::dump_stats();
         else if (strcmp(buf, "version") == 0) {
           term::puts("       _____ _____ \n"
                      "      |  _  /  ___|\n"
@@ -167,7 +119,7 @@ void kmain(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t
   }
 }
 
-void printMemListing(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* free_mem) {
+void printMemListing(uint32_t* mem_listing_start, const uint32_t* mem_listing_end) {
   term::putsln("BIOS memory map:");
   int i = 0;
   while (mem_listing_start < mem_listing_end) {
@@ -203,7 +155,7 @@ void printMemListing(uint32_t* mem_listing_start, const uint32_t* mem_listing_en
   }
 }
 
-void printprtt(uint32_t* mem_listing_start, const uint32_t* mem_listing_end, uint8_t* free_mem) {
+void printprtt(uint8_t* free_mem) {
   ata::Bus ata0(ata::stdData::bus::ioport::primary);
   ata::Drive dr = *ata0.master().lookforDrive();
 

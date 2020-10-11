@@ -379,13 +379,23 @@ main = shakeArgs shakeOptions' $ do
     common_flags = common_flags (defaultCPPObjectConfig :: CPPObjectConfig)++[
       "-m32", "-fno-stack-protector", "-mno-sse", "-ffreestanding",
       "-nostdlib"
-    ]
+    ],
+    includes = emptyIncludeDirList {
+      includeDirs = ["src"</>"krnl"</>"hpp"]
+    }
   }
 
   let kernelLinkBaseCommonFlags = defaultLinkCommonFlags++["-nostdlib", "--Ttext", "0"]
   let kernelLinkBaseConfig = defaultLinkConfig{
     common_flags = kernelLinkBaseCommonFlags,
-    sources = ("krnl"</>) <$> ["main", "ata", "term", "ps8042"]
+    sources = ("krnl"</>) <$> [
+      "main",
+      "ata",
+      "term",
+      "ps8042",
+      "string",
+      "alloc"</>"watermark"
+    ]
   }
   linkRules kernelLinkBaseConfig{
     outPath = "krnl"</>"elf",
@@ -438,6 +448,12 @@ main = shakeArgs shakeOptions' $ do
       liftIO $ execStateT f initState
 
     let blockSize = 512
+    liftIO $ putStrLn (
+      "krnl_loc = " ++ show krnl_loc ++
+      " (" ++ show (krnl_loc `div` blockSize) ++ ", " ++ show (krnl_loc `mod` blockSize) ++
+      "), krnl_size = " ++ show krnl_size ++
+      " (" ++ show (krnl_size `div` blockSize) ++ ", " ++ show (krnl_size `mod` blockSize) ++ ")")
+
     let defines = [
             ("krnl_loc_seg",  show (krnl_loc `div` blockSize)),
             ("krnl_loc_off",  show (krnl_loc `mod` blockSize)),

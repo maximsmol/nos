@@ -296,4 +296,13 @@ namespace term {
 
     va_end(args);
   }
+
+  void panicln(const char* str) {
+    asm volatile("cli" : : );
+
+    puts("PANIC: ");
+    putsln(str);
+
+    asm volatile("hlt" : : );
+  }
 }

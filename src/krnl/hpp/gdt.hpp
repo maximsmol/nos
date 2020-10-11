@@ -3,7 +3,7 @@
 #include "util/gdt.hpp"
 
 namespace gdt {
-  static constexpr uint64_t gdt[] = {
+  constexpr uint64_t gdt[] = {
     0, // null-selector is invalid, no matter what the entry is, so set to an invalid value
     util::gdt::Entry(
       /*.base = */0,
@@ -28,7 +28,7 @@ namespace gdt {
       }
     ).bin()
   };
-  static constexpr util::gdt::GDTR gdtr = {
+  constexpr util::gdt::GDTR gdtr = {
     /*.gdt_size = */sizeof(gdt)-1,
     /*.gdt = */gdt
   };

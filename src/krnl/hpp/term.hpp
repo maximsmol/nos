@@ -38,4 +38,7 @@ namespace term {
   void putsln(const char* str);
   [[gnu::format(printf, 1, 2)]]
   void printf(const char* fmt...);
+
+
+  void panicln(const char* str);
 }

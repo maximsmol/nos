@@ -21,10 +21,84 @@ boot16:
     mov al, 3 ; 80x25
     int 0x10
 
+  f_demo_puts16 '[boot16]: read boot32'
+
+  read_boot32:
+    mov bx, boot32_section ; out loc
+
+    mov al, 1 ; sec count
+    mov ch, 0 ; cyl #
+    mov cl, 2 ; start sec # (1-based)
+    mov dh, 0 ; head #
+    mov dl, 0x80 ; drive # (0x80 = 'C')
+
+    mov ah, 2 ; read
+    int 0x13
+
+  f_demo_puts16 '[boot16]: read partition table'
+
+  read_prtt:
+    mov bx, pprtt ; out loc
+
+    mov al, prtt_size_sec ; sec count
+    mov ch, 0 ; cyl #
+    mov cl, 3 ; start sec # (1-based)
+    mov dh, 0 ; head #
+    mov dl, 0x80 ; drive # (0x80 = 'C')
+
+    mov ah, 2 ; read
+    int 0x13
+
+    mov ax, pprtt
+    add ax, prtt_size
+    mov [pfree_mem], ax
+
+  f_demo_puts16_ptr boot16_kexec_message
+
+  read_krnl:
+    mov si, pprtt
+
+    mov bx, [pfree_mem]
+    mov dx, [si + prtt.krnl + prtt_entry.loc_off]
+    add dx, bx
+    mov [pkrnl_tmp], dx
+
+    ; al = sec count (cannot be > 128)
+    mov ax, [si + prtt.krnl + prtt_entry.size_off]
+    add ax, 511
+    shr ax, 9
+    add ax, [si + prtt.krnl + prtt_entry.size_seg]
+    ; ceil(size_off/512) + size_seg
+
+    ; cl = start sec # (1-based)
+    mov cx, [si + prtt.krnl + prtt_entry.loc_off]
+    add cx, 511
+    shr cx, 9
+    add cx, [si + prtt.krnl + prtt_entry.loc_seg]
+    ; ceil(loc_off/512) + loc_seg
+    and cx, 0x1f ; have to mask this because bits 6+ are for the cylinder
+
+    mov ch, 0 ; cyl #
+    mov dh, 0 ; head #
+    mov dl, 0x80 ; drive # (0x80 = 'C')
+
+    push ax
+
+    mov ah, 2 ; read
+    int 0x13
+
+    pop ax
+    shl ax, 9
+    mov bx, [pfree_mem]
+    add bx, ax
+    mov [pfree_mem], bx
+
   f_demo_puts16 '[boot16]: read mem map'
 
   read_mem_listing:
-    mov di, mem_listing ; dest
+    mov di, [pfree_mem] ; dest
+    mov [pmem_listing], di
+
     xor bp, bp ; non-0 = !first iteration
 
     xor ebx, ebx ; magic iteration num = 0 @ start
@@ -62,69 +136,7 @@ boot16:
     jmp $ ; hlt
 
     .done:
-    mov [pmem_listing_end], di
-
-  f_demo_puts16 '[boot16]: read boot32'
-
-  read_boot32:
-    mov bx, boot32_section ; out loc
-
-    mov al, 1 ; sec count
-    mov ch, 0 ; cyl #
-    mov cl, 2 ; start sec # (1-based)
-    mov dh, 0 ; head #
-    mov dl, 0x80 ; drive # (0x80 = 'C')
-
-    mov ah, 2 ; read
-    int 0x13
-
-  f_demo_puts16 '[boot16]: read partition table'
-
-  read_prtt:
-    mov bx, [pfree_mem] ; out loc
-
-    mov al, prtt_size_sec ; sec count
-    mov ch, 0 ; cyl #
-    mov cl, 3 ; start sec # (1-based)
-    mov dh, 0 ; head #
-    mov dl, 0x80 ; drive # (0x80 = 'C')
-
-    mov ah, 2 ; read
-    int 0x13
-
-  f_demo_puts16_ptr boot16_kexec_message
-
-  read_krnl:
-    mov bx, [pfree_mem] ; out loc
-    add bx, prtt_size
-
-    mov si, [pprtt]
-
-    movzx dx, byte [si + prtt.krnl + prtt_entry.loc_off]
-    mov di, bx
-    add di, dx
-    mov [pkrnl_tmp], di
-
-    ; al = sec count
-    movzx ax, byte [si + prtt.krnl + prtt_entry.size_off]
-    add ax, 511
-    shr ax, 9
-    add al, [si + prtt.krnl + prtt_entry.size_seg]
-    ; ceil(size_off/512) + size_seg
-
-    ; cl = start sec # (1-based)
-    movzx cx, byte [si + prtt.krnl + prtt_entry.loc_off]
-    add cx, 511
-    shr cx, 9
-    add cl, [si + prtt.krnl + prtt_entry.loc_seg]
-    ; ceil(size_off/512) + size_seg
-
-    mov ch, 0 ; cyl #
-    mov dh, 0 ; head #
-    mov dl, 0x80 ; drive # (0x80 = 'C')
-
-    mov ah, 2 ; read
-    int 0x13
+    mov [pfree_mem], di
 
   f_demo_puts16_ptr boot16_proto_message
 
@@ -164,11 +176,11 @@ gdtr_tmp:
   dd gdt_tmp
 ; - - -
 
-pmem_listing_end:
 pfree_mem:
-pprtt:
   dw 0
 pkrnl_tmp:
+  dw 0
+pmem_listing:
   dw 0
 
 boot_pad: times 512-2-($-$$) db 0
@@ -181,4 +193,4 @@ boot_sig: db 0x55,0xaa
 times 1024-($-$$) db 0
 
 boot_end:
-mem_listing:
+pprtt:
